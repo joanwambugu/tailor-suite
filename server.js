@@ -36,11 +36,20 @@ app.post("/api/orders", async (req, res) => {
     try {
         const { name, phone, measurements, garmentDesc, financials } = req.body;
 
+        // Force explicit base-10 integer conversion at the API gateway entry point
+        const total = parseInt(financials?.total, 10) || 0;
+        const deposit = parseInt(financials?.deposit, 10) || 0;
+        const balance = total - deposit; // Mathematically guaranteed true subtraction
+
         const newOrder = {
             name,
             phone,
             garmentDesc,
-            financials,
+            financials: {
+                total,
+                deposit,
+                balance: balance >= 0 ? balance : 0
+            },
             status: "Stitching",
             createdAt: new Date()
         };
@@ -62,9 +71,9 @@ app.post("/api/orders", async (req, res) => {
         // 3. Return clean JSON success payload
         res.status(201).json({ success: true, orderId: savedOrder.insertedId });
 
-        // 4. Background SMS Dispatch Pipeline
+        // 4. Background SMS Dispatch Pipeline (Guaranteed clean numbers)
         if (sms) {
-            const smsMessage = `Hello ${name}, your order for ${garmentDesc} has been received! Total: KSh ${financials.total}, Paid: KSh ${financials.deposit}, Balance: KSh ${financials.balance}. Thank you!`;
+            const smsMessage = `Hello ${name}, your order for ${garmentDesc} has been received! Total: KSh ${total.toLocaleString()}, Paid: KSh ${deposit.toLocaleString()}, Balance: KSh ${newOrder.financials.balance.toLocaleString()}. Thank you!`;
             
             sms.send({ to: [phone], message: smsMessage })
                 .then(response => console.log("SMS Notification Dispatched:", response))
@@ -140,12 +149,13 @@ app.get("/api/analytics/summary", async (req, res) => {
         let totalBalances = 0;
         
         orders.forEach(order => {
-            const total = Number(order.financials?.total || 0);
-            const deposit = Number(order.financials?.deposit || 0);
-            const balance = Number(order.financials?.balance || 0);
+            // Re-enforce defensive base-10 resolution to handle legacy string entries cleanly
+            const total = parseInt(order.financials?.total, 10) || 0;
+            const deposit = parseInt(order.financials?.deposit, 10) || 0;
+            const balance = total - deposit;
             
             totalPaid += deposit;
-            totalBalances += balance;
+            totalBalances += balance >= 0 ? balance : 0;
         });
         
         res.status(200).json({
