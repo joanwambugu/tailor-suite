@@ -1,22 +1,7 @@
-// --- NODE ENGINE DEPRECATION PATCH FOR NEDB ---
-const util = require('util');
-if (typeof util.isDate !== 'function') {
-    util.isDate = function (obj) {
-        return Object.prototype.toString.call(obj) === '[object Date]';
-    };
-}
-if (typeof util.RegExp !== 'function') {
-    util.isRegExp = function (obj) {
-        return Object.prototype.toString.call(obj) === '[object RegExp]';
-    };
-}
-// ----------------------------------------------
-
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const db = require("./database");
-// ... rest of your code stays exactly the same
 
 const app = express();
 app.use(express.json());
@@ -27,13 +12,11 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // --- AFRICA'S TALKING SETUP (SECURED FOR GITHUB) ---
 const credentials = {
-    // Reads from environment variable on the server, fallback to empty string
     apiKey: process.env.AT_API_KEY || "", 
     username: process.env.AT_USERNAME || "sandbox"
 };
 
 let sms;
-// Only try to initialize if an API key actually exists
 if (credentials.apiKey) {
     try {
         const AfricasTalking = require("africastalking")(credentials);
@@ -46,85 +29,137 @@ if (credentials.apiKey) {
     console.log("ℹ️ Running in local/offline mode (No SMS API Key detected).");
 }
 
+// ==========================================================================
 // API Route 1: Save New Order and Client Profile Safely
-app.post("/api/orders", (req, res) => {
-    const { name, phone, measurements, garmentDesc, financials } = req.body;
+// ==========================================================================
+app.post("/api/orders", async (req, res) => {
+    try {
+        const { name, phone, measurements, garmentDesc, financials } = req.body;
 
-    const newOrder = {
-        name,
-        phone,
-        garmentDesc,
-        financials,
-        status: "Stitching",
-        createdAt: new Date()
-    };
+        const newOrder = {
+            name,
+            phone,
+            garmentDesc,
+            financials,
+            status: "Stitching",
+            createdAt: new Date()
+        };
 
-    // 1. Save the active order details to local database
-    db.orders.insert(newOrder, (err, savedOrder) => {
-        if (err) {
-            console.error("Database Insert Error:", err);
-            return res.status(500).json({ success: false, error: err.message });
-        }
+        // 1. Save active order to MongoDB cloud cluster
+        const savedOrder = await db.orders.insertOne(newOrder);
 
-        // 2. Upsert the permanent client profile card
-        const clientProfile = { name, phone, measurements, updatedAt: new Date() };
-        db.clients.update({ phone: phone }, clientProfile, { upsert: true }, (clientErr) => {
-            if (clientErr) console.error("Failed to compile client history card:", clientErr);
-        });
+        // 2. Upsert permanent client measurements profile card
+        const clientProfile = { 
+            $set: { 
+                name, 
+                phone, 
+                measurements, 
+                updatedAt: new Date() 
+            } 
+        };
+        await db.clients.updateOne({ phone: phone }, clientProfile, { upsert: true });
 
-        // 3. Send immediate JSON success response to frontend so the UI doesn't hang
-        res.status(201).json({ success: true, order: savedOrder });
+        // 3. Return clean JSON success payload
+        res.status(201).json({ success: true, orderId: savedOrder.insertedId });
 
-        // 4. Fire-and-forget the SMS in the background
+        // 4. Background SMS Dispatch Pipeline
         if (sms) {
             const smsMessage = `Hello ${name}, your order for ${garmentDesc} has been received! Total: KSh ${financials.total}, Paid: KSh ${financials.deposit}, Balance: KSh ${financials.balance}. Thank you!`;
             
             sms.send({ to: [phone], message: smsMessage })
                 .then(response => console.log("SMS Notification Dispatched:", response))
                 .catch(smsErr => console.log("SMS Gateway Offline (Order Saved Locally):", smsErr.message));
-        } else {
-            console.log("SMS Service not initialized. Order saved locally.");
         }
-    });
+    } catch (err) {
+        console.error("Database Insert Error:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
+// ==========================================================================
 // API Route 2: Fetch all active tailoring orders
-app.get("/api/orders", (req, res) => {
-    db.orders.find({}).sort({ createdAt: -1 }).exec((err, docs) => {
-        if (err) return res.status(500).json({ success: false, error: err.message });
-        res.status(200).json(docs);
-    });
+// ==========================================================================
+app.get("/api/orders", async (req, res) => {
+    try {
+        const orders = await db.orders.find({}).sort({ createdAt: -1 }).toArray();
+        res.status(200).json(orders);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
+// ==========================================================================
 // API Route 3: Fetch all saved client measurement logs
-app.get("/api/clients", (req, res) => {
-    db.clients.find({}).sort({ name: 1 }).exec((err, docs) => {
-        if (err) return res.status(500).json({ success: false, error: err.message });
-        res.status(200).json(docs);
-    });
+// ==========================================================================
+app.get("/api/clients", async (req, res) => {
+    try {
+        const clients = await db.clients.find({}).sort({ name: 1 }).toArray();
+        res.status(200).json(clients);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ==========================================================================
+// API Route 4: Update an existing client's measurement profiles
+// ==========================================================================
+app.put("/api/clients/:phone", async (req, res) => {
+    try {
+        const clientPhone = req.params.phone;
+        const { name, measurements } = req.body;
+
+        const updatedData = { 
+            $set: { 
+                name: name,
+                measurements: measurements, 
+                updatedAt: new Date() 
+            } 
+        };
+
+        const result = await db.clients.updateOne({ phone: clientPhone }, updatedData);
+        
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ success: false, error: "Client record profile not found." });
+        }
+        
+        res.status(200).json({ success: true, message: "Client dimensions updated successfully." });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ==========================================================================
+// API Route 5: Live Financial & Order Metrics Summary
+// ==========================================================================
+app.get("/api/analytics/summary", async (req, res) => {
+    try {
+        const orders = await db.orders.find({}).toArray();
+        
+        let totalOrders = orders.length;
+        let totalPaid = 0;
+        let totalBalances = 0;
+        
+        orders.forEach(order => {
+            const total = Number(order.financials?.total || 0);
+            const deposit = Number(order.financials?.deposit || 0);
+            const balance = Number(order.financials?.balance || 0);
+            
+            totalPaid += deposit;
+            totalBalances += balance;
+        });
+        
+        res.status(200).json({
+            success: true,
+            metrics: {
+                totalOrders,
+                totalPaid,
+                totalBalances
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 const PORT = 5000;
-app.listen(PORT, () => console.log("🚀 Custom Tailor Suite engine active on http://localhost:" + PORT));
-
-// API Route 4: Update an existing client's measurement profiles
-app.put("/api/clients/:phone", (req, res) => {
-    const clientPhone = req.params.phone;
-    const { name, measurements } = req.body;
-
-    const updatedData = { 
-        $set: { 
-            name: name,
-            measurements: measurements, 
-            updatedAt: new Date() 
-        } 
-    };
-
-    // Update record matching the unique phone number identifier
-    db.clients.update({ phone: clientPhone }, updatedData, {}, (err, numReplaced) => {
-        if (err) return res.status(500).json({ success: false, error: err.message });
-        if (numReplaced === 0) return res.status(404).json({ success: false, error: "Client record profile not found." });
-        
-        res.status(200).json({ success: true, message: "Client dimensions updated successfully." });
-    });
-});
+app.listen(PORT, () => console.log("🚀 Custom Tailor Suite engine active on port " + PORT));
