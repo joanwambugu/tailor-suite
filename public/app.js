@@ -117,7 +117,11 @@ async function loadActiveOrders() {
 
         orders.forEach(order => {
             const tr = document.createElement("tr");
-            const orderData = btoa(JSON.stringify(order));
+            // Current:
+// const orderData = btoa(JSON.stringify(order));
+
+// Recommended (Safe for special characters/emojis):
+const orderData = btoa(encodeURIComponent(JSON.stringify(order)));
 
             tr.innerHTML = `
                 <td><strong>${order.name}</strong><br><small>${order.phone}</small></td>
@@ -167,7 +171,7 @@ async function loadClientDirectory() {
 
 // Helper: Print Receipt
 window.printReceipt = function(base64Data) {
-    const order = JSON.parse(atob(base64Data));
+    const order = JSON.parse(decodeURIComponent(atob(base64Data)));
     const date = new Date().toLocaleDateString();
 
     const receiptHTML = `
