@@ -1,33 +1,52 @@
 const { MongoClient } = require("mongodb");
 
 // Securely read connection string from Render environment configurations
-const uri = process.env.MONGO_URI;
+const uri = (process.env.MONGO_URI || "").trim();
 
-// Defensive check: If the variable is missing, intercept early with a clear warning
-if (!uri || uri.trim() === "") {
+// Setup a safe fallback interface object to keep the server running if configurations fail
+const dummyFallback = {
+    orders: { find: () => ({ sort: () => ({ toArray: async () => [] }) }), insertOne: async () => ({}) },
+    clients: { find: () => ({ sort: () => ({ toArray: async () => [] }) }), updateOne: async () => ({}) }
+};
+
+// 1. Structural Guard: Check if empty
+if (!uri) {
     console.error("==========================================================================");
-    console.error("❌ CRITICAL DATABASE APPLICATION CONFIGURATION ERROR:");
-    console.error("The 'MONGO_URI' environment variable is empty or completely undefined.");
-    console.error("Please add it under your Web Service 'Environment' configuration tab on Render.");
+    console.error("❌ CRITICAL CONFIGURATION ERROR: 'MONGO_URI' is empty or undefined on Render.");
     console.error("==========================================================================");
-    
-    // Fallback to a dummy object interface to prevent crash on require() instantiation loops
-    module.exports = {
-        orders: { find: () => ({ sort: () => ({ toArray: async () => [] }) }), insertOne: async () => ({}) },
-        clients: { find: () => ({ sort: () => ({ toArray: async () => [] }) }), updateOne: async () => ({}) }
-    };
-} else {
-    const client = new MongoClient(uri);
-    const database = client.db("tailorProduction");
+    module.exports = dummyFallback;
+} 
+// 2. Scheme Guard: Enforce strict connection string prefixes
+else if (!uri.startsWith("mongodb://") && !uri.startsWith("mongodb+srv://")) {
+    console.error("==========================================================================");
+    console.error("❌ CRITICAL DATABASE SCHEME VALUE ERROR:");
+    console.error("Your MONGO_URI variable exists on Render, but its formatting is invalid.");
+    console.error("It must explicitly begin with 'mongodb://' or 'mongodb+srv://'.");
+    console.error("==========================================================================");
+    module.exports = dummyFallback;
+} 
+// 3. Resilient Initialization Pipeline
+else {
+    try {
+        // Instantiate the client with built-in connection pool parameters
+        const client = new MongoClient(uri, {
+            maxPoolSize: 10,             // Maintain up to 10 active concurrent sockets
+            serverSelectionTimeoutMS: 5000 // Timeout early instead of locking the thread if cluster is unreachable
+        });
 
-    const db = {
-        orders: database.collection("orders"),
-        clients: database.collection("clients")
-    };
+        const database = client.db("tailorProduction");
 
-    client.connect()
-        .then(() => console.log("🍃 Connected successfully to MongoDB Atlas Cloud Hub."))
-        .catch(err => console.error("❌ MongoDB connection failure:", err.message));
+        // Export collections directly. The driver will lazily connect and auto-heal sockets natively!
+        const db = {
+            orders: database.collection("orders"),
+            clients: database.collection("clients")
+        };
 
-    module.exports = db;
+        console.log("🍃 MongoDB driver interface pooling pipeline established.");
+        module.exports = db;
+        
+    } catch (instantiationError) {
+        console.error("❌ Failed to instantiate MongoClient driver interface:", instantiationError.message);
+        module.exports = dummyFallback;
+    }
 }
