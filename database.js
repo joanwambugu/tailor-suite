@@ -1,26 +1,33 @@
 const { MongoClient } = require("mongodb");
 
-// Reads your connection string securely from Render's dashboard environment panel
+// Securely read connection string from Render environment configurations
 const uri = process.env.MONGO_URI;
 
-if (!uri) {
-    console.error("❌ CRITICAL ERROR: MONGO_URI environment variable is missing on Render!");
+// Defensive check: If the variable is missing, intercept early with a clear warning
+if (!uri || uri.trim() === "") {
+    console.error("==========================================================================");
+    console.error("❌ CRITICAL DATABASE APPLICATION CONFIGURATION ERROR:");
+    console.error("The 'MONGO_URI' environment variable is empty or completely undefined.");
+    console.error("Please add it under your Web Service 'Environment' configuration tab on Render.");
+    console.error("==========================================================================");
+    
+    // Fallback to a dummy object interface to prevent crash on require() instantiation loops
+    module.exports = {
+        orders: { find: () => ({ sort: () => ({ toArray: async () => [] }) }), insertOne: async () => ({}) },
+        clients: { find: () => ({ sort: () => ({ toArray: async () => [] }) }), updateOne: async () => ({}) }
+    };
+} else {
+    const client = new MongoClient(uri);
+    const database = client.db("tailorProduction");
+
+    const db = {
+        orders: database.collection("orders"),
+        clients: database.collection("clients")
+    };
+
+    client.connect()
+        .then(() => console.log("🍃 Connected successfully to MongoDB Atlas Cloud Hub."))
+        .catch(err => console.error("❌ MongoDB connection failure:", err.message));
+
+    module.exports = db;
 }
-
-const client = new MongoClient(uri);
-
-// Connect directly to your specific database namespace
-const database = client.db("tailorProduction");
-
-// Export the collection pointers immediately so server.js can hook into them on bootup
-const db = {
-    orders: database.collection("orders"),
-    clients: database.collection("clients")
-};
-
-// Fire the connection in the background without blocking the initialization export
-client.connect()
-    .then(() => console.log("🍃 Connected successfully to MongoDB Atlas Cloud Hub."))
-    .catch(err => console.error("❌ MongoDB connection failure:", err.message));
-
-module.exports = db;
