@@ -106,3 +106,25 @@ app.get("/api/clients", (req, res) => {
 
 const PORT = 5000;
 app.listen(PORT, () => console.log("🚀 Custom Tailor Suite engine active on http://localhost:" + PORT));
+
+// API Route 4: Update an existing client's measurement profiles
+app.put("/api/clients/:phone", (req, res) => {
+    const clientPhone = req.params.phone;
+    const { name, measurements } = req.body;
+
+    const updatedData = { 
+        $set: { 
+            name: name,
+            measurements: measurements, 
+            updatedAt: new Date() 
+        } 
+    };
+
+    // Update record matching the unique phone number identifier
+    db.clients.update({ phone: clientPhone }, updatedData, {}, (err, numReplaced) => {
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        if (numReplaced === 0) return res.status(404).json({ success: false, error: "Client record profile not found." });
+        
+        res.status(200).json({ success: true, message: "Client dimensions updated successfully." });
+    });
+});

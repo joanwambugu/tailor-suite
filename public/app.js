@@ -371,23 +371,69 @@ async function loadClientDirectory() {
             return;
         }
 
-        clients.forEach(client => {
-            const m = client.measurements;
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td><strong>${client.name}</strong></td>
-                <td>${client.phone}</td>
-                <td>
-                    Sh: ${m.shoulder || 0}" | 
-                    Chst: ${m.chest || 0}" | 
-                    Slv: ${m.sleeve || 0}" | 
-                    Wst: ${m.waist || 0}" | 
-                    Lng: ${m.trouserLength || 0}"
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
+       clients.forEach(client => {
+    const m = client.measurements;
+    const tr = document.createElement("tr");
+    
+    // Safely encode client object string parameters
+    const clientData = btoa(JSON.stringify(client));
+
+    tr.innerHTML = `
+        <td><strong>${client.name}</strong></td>
+        <td>${client.phone}</td>
+        <td>
+            Sh: ${m.shoulder || 0}" | Chst: ${m.chest || 0}" | Slv: ${m.sleeve || 0}" | Wst: ${m.waist || 0}" | Lng: ${m.trouserLength || 0}"
+        </td>
+        <td>
+            <button class="btn-action" style="background:#f1f5f9; color:#0f172a;" onclick="openEditModal('${clientData}')">✏️ Edit</button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+});
     } catch (err) {
         console.error("Error loading client directory:", err);
     }
 }
+// Dynamic Prompt-based Client Data Modifier Utility
+window.openEditModal = async function(base64Data) {
+    const client = JSON.parse(atob(base64Data));
+    
+    // Quick prompt sequence to collect updated alterations
+    const newName = prompt(`Update client name for ${client.name}:`, client.name);
+    if (newName === null) return; // Action aborted by user
+
+    const newShoulder = prompt("Enter new Shoulder measurement (\"):", client.measurements.shoulder || 0);
+    const newChest = prompt("Enter new Chest measurement (\"):", client.measurements.chest || 0);
+    const newWaist = prompt("Enter new Waist measurement (\"):", client.measurements.waist || 0);
+    const newLength = prompt("Enter new Trouser/Garment Length (\"):", client.measurements.trouserLength || 0);
+
+    const updatedPayload = {
+        name: newName.trim(),
+        measurements: {
+            ...client.measurements, // Retain unchanged fields
+            shoulder: newShoulder,
+            chest: newChest,
+            waist: newWaist,
+            trouserLength: newLength
+        }
+    };
+
+    try {
+        const response = await fetch(`/api/clients/${client.phone}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedPayload)
+        });
+
+        const result = await response.json();
+        if (response.ok && result.success) {
+            alert("✨ Client profile measurements modified successfully!");
+            loadClientDirectory(); // Refresh the active log directory interface view
+        } else {
+            alert("❌ Update failed: " + result.error);
+        }
+    } catch (err) {
+        console.error("Client update error:", err);
+        alert("❌ Error communicating with backend server instances.");
+    }
+};
