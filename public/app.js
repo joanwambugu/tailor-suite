@@ -168,16 +168,18 @@ async function loadClientDirectory() {
 }
 
 // Helper: Print Receipt
-// Helper: Print Receipt
 window.printReceipt = function(base64Data) {
     const order = JSON.parse(decodeURIComponent(atob(base64Data)));
     console.log("DEBUG: Receipt order object:", order);
     
+    // Define the filename and date
+    const fileName = `Receipt_${order.name.replace(/\s+/g, '_')}_${new Date().toLocaleDateString().replace(/\//g, '-')}`;
     const date = new Date().toLocaleDateString();
     
     const receiptHTML = `
         <html>
             <head>
+                <title>${fileName}</title>
                 <style>
                     body { font-family: 'Segoe UI', sans-serif; color: #1e293b; padding: 40px; }
                     .header { text-align: center; margin-bottom: 30px; }
@@ -221,6 +223,7 @@ window.printReceipt = function(base64Data) {
     printWindow.document.write(receiptHTML);
     printWindow.document.close();
     
+    // Trigger print after rendering
     setTimeout(() => { 
         printWindow.print(); 
     }, 500);
