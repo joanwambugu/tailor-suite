@@ -1,20 +1,29 @@
-const Datastore = require("nedb");
-const path = require("path");
+const { MongoClient } = require("mongodb");
 
-const db = {};
+// Reads your connection string securely from Render's dashboard environment panel
+const uri = process.env.MONGO_URI || "YOUR_LOCAL_MONGODB_FALLBACK_STRING_IF_ANY";
+const client = new MongoClient(uri);
 
-db.orders = new Datastore({ 
-    filename: path.join(__dirname, "data", "orders.db"), 
-    autoload: true 
-});
+let db = {
+    orders: null,
+    clients: null
+};
 
-db.clients = new Datastore({ 
-    filename: path.join(__dirname, "data", "clients.db"), 
-    autoload: true 
-});
+async function connectDatabase() {
+    try {
+        await client.connect();
+        const database = client.db("tailorProduction");
+        
+        // Map database collections to simulate the existing app structure
+        db.orders = database.collection("orders");
+        db.clients = database.collection("clients");
+        
+        console.log("🍃 Connected successfully to MongoDB Atlas Cloud Hub.");
+    } catch (error) {
+        console.error("Database connection failure:", error);
+    }
+}
 
-db.clients.ensureIndex({ fieldName: "phone", unique: true }, (err) => {
-    if (err) console.error("Database tracking index error:", err);
-});
+connectDatabase();
 
 module.exports = db;
