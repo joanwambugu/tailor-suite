@@ -37,9 +37,11 @@ function setupBalanceCalculator() {
     const balanceInput = document.getElementById("balanceDue");
 
     function calculate() {
-        const total = parseFloat(totalInput.value) || 0;
-        const deposit = parseFloat(depositInput.value) || 0;
+        // Force base-10 numerical conversion to prevent string clipping
+        const total = parseInt(totalInput.value, 10) || 0;
+        const deposit = parseInt(depositInput.value, 10) || 0;
         const balance = total - deposit;
+        
         balanceInput.value = balance >= 0 ? balance : 0;
     }
 
@@ -73,9 +75,9 @@ function setupFormSubmission() {
             },
             garmentDesc: document.getElementById("garmentDesc").value.trim(),
             financials: {
-                total: document.getElementById("totalPrice").value,
-                deposit: document.getElementById("depositPaid").value,
-                balance: document.getElementById("balanceDue").value
+                total: parseInt(document.getElementById("totalPrice").value, 10) || 0,
+                deposit: parseInt(document.getElementById("depositPaid").value, 10) || 0,
+                balance: parseInt(document.getElementById("balanceDue").value, 10) || 0
             }
         };
 
@@ -275,7 +277,7 @@ window.openEditModal = async function(base64Data) {
 
     const updatedPayload = {
         name: newName.trim(),
-        measurements = {
+        measurements: {
             ...client.measurements,
             shoulder: newShoulder,
             chest: newChest,
