@@ -10,18 +10,25 @@ app.use(cors());
 // Serve the frontend UI files automatically
 app.use(express.static(path.join(__dirname, "public")));
 
-// --- AFRICA'S TALKING SETUP ---
+// --- AFRICA'S TALKING SETUP (SECURED FOR GITHUB) ---
 const credentials = {
-    apiKey: "atsk_91d3fd9bb85c335e4fed6a82111f9f33e16c354803dc1395c88a6f0f770f26e5afeb9de2",
-    username: "sandbox"
+    // Reads from environment variable on the server, fallback to empty string
+    apiKey: process.env.AT_API_KEY || "", 
+    username: process.env.AT_USERNAME || "sandbox"
 };
 
 let sms;
-try {
-    const AfricasTalking = require("africastalking")(credentials);
-    sms = AfricasTalking.SMS;
-} catch (initErr) {
-    console.error("SMS Gateway configuration initialization failed:", initErr.message);
+// Only try to initialize if an API key actually exists
+if (credentials.apiKey) {
+    try {
+        const AfricasTalking = require("africastalking")(credentials);
+        sms = AfricasTalking.SMS;
+        console.log("ℹ️ SMS Gateway configured successfully.");
+    } catch (initErr) {
+        console.error("⚠️ SMS Gateway initialization failed:", initErr.message);
+    }
+} else {
+    console.log("ℹ️ Running in local/offline mode (No SMS API Key detected).");
 }
 
 // API Route 1: Save New Order and Client Profile Safely
