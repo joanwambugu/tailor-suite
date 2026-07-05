@@ -3,7 +3,6 @@
     "africastalking": "^0.7.9",
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "mongodb": "^7.4.0",
     "nedb": "^1.8.0"
   }
 }

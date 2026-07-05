@@ -1,2 +1,6 @@
+{"name":"john","phone":"7899","measurements":{"shoulder":"10","chest":"23","sleeve":"76","shirtLength":"98","waist":"56","hips":"75","inseam":"78","trouserLength":"54"},"updatedAt":{"$$date":1783269499444},"_id":"6P5unaTFK5JO0PpP"}
+{"name":"ann","phone":"87654","measurements":{"shoulder":"23","chest":"234","sleeve":"456","shirtLength":"345","waist":"65","hips":"76","inseam":"87","trouserLength":"76"},"updatedAt":{"$$date":1783269062421},"_id":"IeTZKjGBnsaQLEO8"}
+{"name":"wilson","phone":"+254713592386","measurements":{"shoulder":"2","chest":"34","sleeve":"56","shirtLength":"76","waist":"45","hips":"76","inseam":"78","trouserLength":"12"},"updatedAt":{"$$date":1783268646136},"_id":"Uouk1bCBUGd8Vwm0"}
 {"name":"Joan Mugure","phone":"+25422298267","measurements":{"shoulder":"10","chest":"28","sleeve":"30","shirtLength":"35","waist":"10","hips":"35.8","inseam":"12","trouserLength":"10"},"updatedAt":{"$$date":1783250506019},"_id":"gIy9AvcViB25e0nk"}
+{"phone":"+254712309875","name":"Joan Mugure","_id":"mR47AE0hFVdoKhBZ"}
 {"$$indexCreated":{"fieldName":"phone","unique":true,"sparse":false}}
