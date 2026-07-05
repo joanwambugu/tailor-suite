@@ -168,16 +168,13 @@ async function loadClientDirectory() {
 }
 
 // Helper: Print Receipt
+// Helper: Print Receipt
 window.printReceipt = function(base64Data) {
     const order = JSON.parse(decodeURIComponent(atob(base64Data)));
-    
-    // DEBUG: Look at this in your F12 console
     console.log("DEBUG: Receipt order object:", order);
     
     const date = new Date().toLocaleDateString();
-    // ... rest of your code
-}
-
+    
     const receiptHTML = `
         <html>
             <head>
@@ -202,19 +199,16 @@ window.printReceipt = function(base64Data) {
                     <small>Nairobi, Kenya • Tel: 0713592386</small>
                 </div>
                 <hr>
-               <div class="info-grid">
-    <div class="label">Invoice Date</div><div>${date}</div>
-    <div class="label">Client Name</div><div>${order.name}</div>
-    <div class="label">Garment</div><div>${order.garmentDesc}</div>
-    <div class="label">Order Status</div><div style="font-weight:bold; color: #2563eb;">${order.status}</div>
-</div>
-                
+                <div class="info-grid">
+                    <div class="label">Invoice Date</div><div>${date}</div>
+                    <div class="label">Client Name</div><div>${order.name}</div>
+                    <div class="label">Garment</div><div>${order.garmentDesc}</div>
+                    <div class="label">Order Status</div><div style="font-weight:bold; color: #2563eb;">${order.status}</div>
+                </div>
                 <div class="table-header"><span>DESCRIPTION</span><span>AMOUNT</span></div>
                 <div class="row"><span>Total Charges</span><span>KSh ${Number(order.financials.total).toLocaleString()}</span></div>
                 <div class="row" style="color: #059669;"><span>Amount Paid (Deposit)</span><span>- KSh ${Number(order.financials.deposit).toLocaleString()}</span></div>
-                
                 <div class="row balance-due"><span>Balance Due</span><span>KSh ${Number(order.financials.balance).toLocaleString()}</span></div>
-                
                 <div class="footer">
                     <p>Thank you for your business!</p>
                     <p><em>Style Tailored to Anywhere.</em></p>
@@ -225,13 +219,12 @@ window.printReceipt = function(base64Data) {
 
     const printWindow = window.open('', '_blank', 'width=600,height=800');
     printWindow.document.write(receiptHTML);
-    printWindow.document.close(); // Essential for rendering
+    printWindow.document.close();
     
-    // Brief delay to ensure fonts/CSS are loaded before print dialog
     setTimeout(() => { 
         printWindow.print(); 
     }, 500);
-;
+};
 // Helper: Edit Client
 window.openEditModal = async function(base64Data) {
     const client = JSON.parse(atob(base64Data));
