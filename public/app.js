@@ -101,6 +101,7 @@ function setupFormSubmission() {
 }
 
 // 4. Load Active Orders (Consolidated with Print)
+// Corrected Load Active Orders function
 async function loadActiveOrders() {
     const tbody = document.getElementById("ordersTableBody");
     if (!tbody) return;
@@ -117,12 +118,9 @@ async function loadActiveOrders() {
 
         orders.forEach(order => {
             const tr = document.createElement("tr");
-            // Current:
-// const orderData = btoa(JSON.stringify(order));
-
-// Recommended (Safe for special characters/emojis):
-const orderData = btoa(encodeURIComponent(JSON.stringify(order)));
-
+            const orderData = btoa(encodeURIComponent(JSON.stringify(order)));
+            
+            // THIS MUST BE INSIDE THE FOREACH LOOP
             tr.innerHTML = `
                 <td><strong>${order.name}</strong><br><small>${order.phone}</small></td>
                 <td>${order.garmentDesc}</td>
@@ -135,7 +133,7 @@ const orderData = btoa(encodeURIComponent(JSON.stringify(order)));
                 </td>
             `;
             tbody.appendChild(tr);
-        });
+        }); // <-- THE CLOSING BRACKET FOR FOREACH GOES HERE
     } catch (err) {
         console.error("Error loading orders:", err);
     }
@@ -172,7 +170,13 @@ async function loadClientDirectory() {
 // Helper: Print Receipt
 window.printReceipt = function(base64Data) {
     const order = JSON.parse(decodeURIComponent(atob(base64Data)));
+    
+    // DEBUG: Look at this in your F12 console
+    console.log("DEBUG: Receipt order object:", order);
+    
     const date = new Date().toLocaleDateString();
+    // ... rest of your code
+}
 
     const receiptHTML = `
         <html>
@@ -227,7 +231,7 @@ window.printReceipt = function(base64Data) {
     setTimeout(() => { 
         printWindow.print(); 
     }, 500);
-};
+;
 // Helper: Edit Client
 window.openEditModal = async function(base64Data) {
     const client = JSON.parse(atob(base64Data));
