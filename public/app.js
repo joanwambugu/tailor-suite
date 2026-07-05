@@ -194,11 +194,12 @@ window.printReceipt = function(base64Data) {
                     <small>Nairobi, Kenya • Tel: 0713592386</small>
                 </div>
                 <hr>
-                <div class="info-grid">
-                    <div class="label">Invoice Date</div><div>${date}</div>
-                    <div class="label">Client Name</div><div>${order.name}</div>
-                    <div class="label">Garment</div><div>${order.garmentDesc}</div>
-                </div>
+               <div class="info-grid">
+    <div class="label">Invoice Date</div><div>${date}</div>
+    <div class="label">Client Name</div><div>${order.name}</div>
+    <div class="label">Garment</div><div>${order.garmentDesc}</div>
+    <div class="label">Order Status</div><div style="font-weight:bold; color: #2563eb;">${order.status}</div>
+</div>
                 
                 <div class="table-header"><span>DESCRIPTION</span><span>AMOUNT</span></div>
                 <div class="row"><span>Total Charges</span><span>KSh ${Number(order.financials.total).toLocaleString()}</span></div>
