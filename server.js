@@ -1,7 +1,22 @@
+// --- NODE ENGINE DEPRECATION PATCH FOR NEDB ---
+const util = require('util');
+if (typeof util.isDate !== 'function') {
+    util.isDate = function (obj) {
+        return Object.prototype.toString.call(obj) === '[object Date]';
+    };
+}
+if (typeof util.RegExp !== 'function') {
+    util.isRegExp = function (obj) {
+        return Object.prototype.toString.call(obj) === '[object RegExp]';
+    };
+}
+// ----------------------------------------------
+
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const db = require("./database");
+// ... rest of your code stays exactly the same
 
 const app = express();
 app.use(express.json());
