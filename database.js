@@ -1,43 +1,18 @@
-const { MongoClient } = require("mongodb");
+const Datastore = require("nedb");
+const path = require("path");
 
-const uri = (process.env.MONGO_URI || "").trim();
-
-const dummyFallback = {
-    orders: { find: () => ({ sort: () => ({ toArray: async () => [] }) }), insertOne: async () => ({}) },
-    clients: { find: () => ({ sort: () => ({ toArray: async () => [] }) }), updateOne: async () => ({}) }
+// Initialize automatic local file-based data stores
+const db = {
+    orders: new Datastore({ 
+        filename: path.join(__dirname, "data", "orders.db"), 
+        autoload: true 
+    }),
+    clients: new Datastore({ 
+        filename: path.join(__dirname, "data", "clients.db"), 
+        autoload: true 
+    })
 };
 
-if (!uri || (!uri.startsWith("mongodb://") && !uri.startsWith("mongodb+srv://"))) {
-    console.error("❌ CRITICAL: MONGO_URI is missing or has an invalid scheme format.");
-    module.exports = dummyFallback;
-} else {
-    try {
-        const client = new MongoClient(uri, {
-            maxPoolSize: 10,
-            serverSelectionTimeoutMS: 5000
-        });
+console.log("📁 Local File Database initialized safely. Data storing in /data folder.");
 
-        const database = client.db("tailorProduction");
-
-        const db = {
-            orders: database.collection("orders"),
-            clients: database.collection("clients")
-        };
-
-        // Run an immediate diagnostics ping test to catch bad passwords on bootup
-        client.db("admin").command({ ping: 1 })
-            .then(() => console.log("🍃 SUCCESS: Connected perfectly to MongoDB Atlas!"))
-            .catch(err => {
-                console.error("==========================================================================");
-                console.error("❌ MONGODB CONFIGURATION OR AUTHENTICATION FAILURE:");
-                console.error(err.message);
-                console.error("Double-check your username, password, and IP whitelist on MongoDB Atlas.");
-                console.error("==========================================================================");
-            });
-
-        module.exports = db;
-    } catch (err) {
-        console.error("❌ Driver initialization crash:", err.message);
-        module.exports = dummyFallback;
-    }
-}
+module.exports = db;
