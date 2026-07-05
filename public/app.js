@@ -143,59 +143,206 @@ async function loadActiveOrders() {
     }
 }
 
-// Global helper function to format and print the receipt layout
+// Global helper function to format and print the beautiful receipt layout
 window.printReceipt = function(base64Data) {
     const order = JSON.parse(atob(base64Data));
     
-    // Create a temporary iframe or print window to isolate the receipt layout style
-    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    // Create a temporary print window with a dynamic title using the client's name
+    const printWindow = window.open('', '_blank', 'width=500,height=700');
     
     const receiptHTML = `
         <!DOCTYPE html>
         <html>
         <head>
+            <meta charset="UTF-8">
             <title>Receipt - ${order.name}</title>
             <style>
-                body { font-family: 'Courier New', Courier, monospace; padding: 20px; color: #000; font-size: 14px; line-height: 1.4; }
+                @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+                
+                body { 
+                    font-family: 'Plus Jakarta Sans', sans-serif; 
+                    padding: 30px; 
+                    color: #1e293b; 
+                    background-color: #fff;
+                    font-size: 13px; 
+                    line-height: 1.5; 
+                    margin: 0;
+                }
                 .text-center { text-align: center; }
-                .divider { border-top: 1px dashed #000; margin: 10px 0; }
-                .flex-row { display: flex; justify-content: space-between; }
-                .bold { font-weight: bold; }
-                .header-title { font-size: 18px; font-weight: bold; margin: 5px 0; }
-                .footer { font-size: 11px; margin-top: 25px; text-align: center; }
+                .text-right { text-align: right; }
+                
+                .brand-header {
+                    margin-bottom: 25px;
+                }
+                .brand-title { 
+                    font-family: 'Playfair Display', serif;
+                    font-size: 26px; 
+                    font-weight: 600; 
+                    letter-spacing: 1px;
+                    color: #0f172a;
+                    margin: 0 0 4px 0; 
+                }
+                .brand-subtitle {
+                    font-size: 11px;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                    color: #64748b;
+                    margin-bottom: 8px;
+                }
+                .brand-contact {
+                    font-size: 12px;
+                    color: #475569;
+                }
+                
+                .divider { 
+                    border-top: 1px solid #e2e8f0; 
+                    margin: 20px 0; 
+                }
+                .double-divider {
+                    border-top: 2px double #cbd5e1;
+                    margin: 15px 0;
+                }
+                
+                .details-table, .financial-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 15px;
+                }
+                
+                .details-table td {
+                    padding: 6px 0;
+                    vertical-align: top;
+                }
+                .details-table td.label {
+                    color: #64748b;
+                    width: 30%;
+                    font-weight: 500;
+                }
+                .details-table td.value {
+                    color: #0f172a;
+                    font-weight: 600;
+                }
+                
+                .section-title {
+                    font-size: 11px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 1.5px;
+                    color: #0f172a;
+                    margin: 25px 0 10px 0;
+                }
+                
+                .financial-table th {
+                    font-size: 11px;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    color: #64748b;
+                    border-bottom: 1px solid #e2e8f0;
+                    padding: 8px 0;
+                    text-align: left;
+                }
+                .financial-table td {
+                    padding: 10px 0;
+                    border-bottom: 1px solid #f1f5f9;
+                }
+                
+                .row-total {
+                    font-size: 13px;
+                    color: #475569;
+                }
+                .row-balance {
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: #b91c1c; /* Crimson Red accent for outstanding balances */
+                }
+                .row-balance.cleared {
+                    color: #15803d; /* Green accent if fully paid */
+                }
+                
+                .footer { 
+                    font-family: 'Plus Jakarta Sans', sans-serif;
+                    font-size: 11px; 
+                    margin-top: 45px; 
+                    color: #64748b;
+                    text-align: center; 
+                }
+                .tagline {
+                    font-family: 'Playfair Display', serif;
+                    font-style: italic;
+                    font-size: 13px;
+                    color: #475569;
+                    margin-top: 6px;
+                }
             </style>
         </head>
         <body>
-            <div class="text-center">
-                <div class="header-title">PRECISION TAILORS</div>
-                <div>Nairobi, Kenya</div>
-                <div>Tel: ${order.phone}</div>
+            <div class="text-center brand-header">
+                <div class="brand-title">PRECISION TAILORS</div>
+                <div class="brand-subtitle">Bespoke Design & Styling</div>
+                <div class="brand-contact">
+                    Nairobi, Kenya &bull; Tel: 0713592386
+                </div>
             </div>
             
             <div class="divider"></div>
             
-            <div><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</div>
-            <div><strong>Client:</strong> ${order.name}</div>
-            <div><strong>Garment:</strong> ${order.garmentDesc}</div>
-            <div><strong>Status:</strong> ${order.status}</div>
+            <table class="details-table">
+                <tr>
+                    <td class="label">Invoice Date</td>
+                    <td class="value">${new Date(order.createdAt).toLocaleDateString('en-GB')}</td>
+                </tr>
+                <tr>
+                    <td class="label">Client Name</td>
+                    <td class="value">${order.name}</td>
+                </tr>
+                <tr>
+                    <td class="label">Garment Description</td>
+                    <td class="value">${order.garmentDesc}</td>
+                </tr>
+                <tr>
+                    <td class="label">Current Status</td>
+                    <td class="value"><span style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase;">${order.status}</span></td>
+                </tr>
+            </table>
             
-            <div class="divider"></div>
-            <div class="bold">FINANCIAL SUMMARY</div>
-            <div class="divider"></div>
+            <div class="section-title">Financial Summary</div>
             
-            <div class="flex-row"><span>Total Charges:</span><span>KSh ${Number(order.financials.total).toLocaleString()}</span></div>
-            <div class="flex-row"><span>Amount Paid:</span><span>KSh ${Number(order.financials.deposit).toLocaleString()}</span></div>
-            <div class="divider"></div>
-            <div class="flex-row bold"><span>Balance Due:</span><span>KSh ${Number(order.financials.balance).toLocaleString()}</span></div>
+            <table class="financial-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th class="text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="row-total">
+                        <td>Total Charges</td>
+                        <td class="text-right">KSh ${Number(order.financials.total).toLocaleString()}</td>
+                    </tr>
+                    <tr class="row-total">
+                        <td>Amount Paid (Deposit)</td>
+                        <td class="text-right" style="color: #16a34a;">- KSh ${Number(order.financials.deposit).toLocaleString()}</td>
+                    </tr>
+                    <tr class="row-balance">
+                        <td style="padding-top: 15px; border-top: 1px dashed #cbd5e1;">Balance Due</td>
+                        <td class="text-right ${Number(order.financials.balance) === 0 ? 'cleared' : ''}" style="padding-top: 15px; border-top: 1px dashed #cbd5e1;">
+                            KSh ${Number(order.financials.balance).toLocaleString()}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
             
-            <div class="divider"></div>
+            <div class="double-divider"></div>
+            
             <div class="footer">
-                Thank you for your business!<br>
-                Style Tailored to Anywhere.
+                Thank you for your business!
+                <div class="tagline">Style Tailored to Anywhere.</div>
             </div>
             
             <script>
                 window.onload = function() {
+                    // Update the actual system print document title to use client's name
+                    document.title = "Receipt - ${order.name.replace(/'/g, "\\'")}";
                     window.print();
                     setTimeout(function() { window.close(); }, 500);
                 };
