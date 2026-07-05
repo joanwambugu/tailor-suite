@@ -1,0 +1,2 @@
+{"name":"Joan Mugure","phone":"+25422298267","measurements":{"shoulder":"10","chest":"28","sleeve":"30","shirtLength":"35","waist":"10","hips":"35.8","inseam":"12","trouserLength":"10"},"updatedAt":{"$$date":1783250506019},"_id":"gIy9AvcViB25e0nk"}
+{"$$indexCreated":{"fieldName":"phone","unique":true,"sparse":false}}

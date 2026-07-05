@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThreadFlow | Tailoring Management System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand">
+            <h2>ThreadFlow</h2>
+            <span class="tagline">Tailor Suite</span>
+        </div>
+        <ul class="nav-tabs">
+            <li class="nav-item active" data-tab="new-client-tab">New Client & Measurements</li>
+            <li class="nav-item" data-tab="orders-tab">Active Orders</li>
+            <li class="nav-item" data-tab="directory-tab">Client Directory</li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        
+        <section id="new-client-tab" class="tab-content active">
+            <div class="header-action">
+                <h1>Log New Order & Measurements</h1>
+            </div>
+            
+            <form id="tailorForm">
+                <div class="card">
+                    <h3>👤 Customer Core Information</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="clientName" placeholder="e.g., Jane Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="text" id="clientPhone" placeholder="e.g., +254712345678" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📏 Measurement Matrix (Inches)</h3>
+                    
+                    <h4>Tops & Jackets</h4>
+                    <div class="grid-4">
+                        <div class="form-group"><label>Shoulder</label><input type="number" step="0.1" id="mShoulder" placeholder="0.0"></div>
+                        <div class="form-group"><label>Chest/Bust</label><input type="number" step="0.1" id="mChest" placeholder="0.0"></div>
+                        <div class="form-group"><label>Sleeve Length</label><input type="number" step="0.1" id="mSleeve" placeholder="0.0"></div>
+                        <div class="form-group"><label>Shirt Length</label><input type="number" step="0.1" id="mShirtLength" placeholder="0.0"></div>
+                    </div>
+
+                    <h4 style="margin-top: 20px;">Bottoms & Trousers</h4>
+                    <div class="grid-4">
+                        <div class="form-group"><label>Waist</label><input type="number" step="0.1" id="mWaist" placeholder="0.0"></div>
+                        <div class="form-group"><label>Hips</label><input type="number" step="0.1" id="mHips" placeholder="0.0"></div>
+                        <div class="form-group"><label>Inseam</label><input type="number" step="0.1" id="mInseam" placeholder="0.0"></div>
+                        <div class="form-group"><label>Trouser Length</label><input type="number" step="0.1" id="mTrouserLength" placeholder="0.0"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>💼 Garment & Financial Details</h3>
+                    <div class="form-group">
+                        <label>Garment Style Description / Special Instructions</label>
+                        <textarea id="garmentDesc" rows="3" placeholder="e.g., Men's Slim Fit Navy Blue 3-Piece Suit with gold buttons..."></textarea>
+                    </div>
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label>Total Quotation (KSh)</label>
+                            <input type="number" id="totalPrice" placeholder="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Deposit Paid (KSh)</label>
+                            <input type="number" id="depositPaid" placeholder="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Calculated Balance (KSh)</label>
+                            <input type="number" id="balanceDue" placeholder="0" readonly style="background: #f3f4f6; font-weight: bold; color: #b91c1c;">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">💾 Save Order & Send Confirmation SMS</button>
+            </form>
+            <div id="statusAlert" class="alert"></div>
+        </section>
+
+        <section id="orders-tab" class="tab-content">
+            <h1>Active Production Board</h1>
+            <p style="color: #6b7280; margin-bottom: 20px;">Track items currently under the needle and update clients instantly when complete.</p>
+            <div class="card">
+                <table class="system-table">
+                    <thead>
+                        <tr>
+                            <th>Client Name</th>
+                            <th>Garment Detail</th>
+                            <th>Balance</th>
+                            <th>Current Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <tr>
+                            <td><strong>Jane Doe</strong><br><small>+254712345678</small></td>
+                            <td>Ankara Dinner Dress</td>
+                            <td class="text-danger">KSh 2,500</td>
+                            <td><span class="badge badge-progress">Stitching</span></td>
+                            <td>
+                                <button class="btn-action btn-sms" onclick="alert('Sending fitting notice...')">💬 Fitting Alert</button>
+                                <button class="btn-action btn-complete" onclick="alert('Marking ready...')">✅ Ready for Pickup</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="directory-tab" class="tab-content">
+            <h1>Client History Directory</h1>
+            <div class="card">
+                <input type="text" id="searchBar" placeholder="🔍 Search clients by name or phone..." style="margin-bottom: 20px;">
+                <table class="system-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Contact</th>
+                            <th>Last Recorded Measurements (Sh | Wst | Lng)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="directoryTableBody">
+                        <tr>
+                            <td>Joan Mugure Wambugu</td>
+                            <td>+254711223344</td>
+                            <td>16.5" | 28.0" | 38.5"</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
