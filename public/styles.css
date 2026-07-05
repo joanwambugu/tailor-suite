@@ -14,7 +14,9 @@ body {
     display: flex;
 }
 
-/* Sidebar Layout */
+/* ==========================================================================
+   Sidebar Layout
+   ========================================================================== */
 .sidebar {
     width: 260px;
     background: var(--primary);
@@ -23,6 +25,7 @@ body {
     position: fixed;
     padding: 20px 0;
     box-sizing: border-box;
+    z-index: 100;
 }
 .sidebar .brand {
     padding: 0 24px 20px 24px;
@@ -45,7 +48,9 @@ body {
     border-left: 4px solid var(--accent);
 }
 
-/* Main Workspace Content */
+/* ==========================================================================
+   Main Workspace Content
+   ========================================================================== */
 .main-content {
     margin-left: 260px;
     flex-grow: 1;
@@ -69,6 +74,32 @@ h4 { margin: 10px 0 5px 0; color: #475569; font-size: 14px; text-transform: uppe
     margin-bottom: 24px;
     border: 1px solid var(--border);
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+/* ==========================================================================
+   Widescreen Dashboard Layout Grid Splitter
+   ========================================================================== */
+.dashboard-grid-layout {
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.main-workspace-flow {
+    flex: 3;
+    min-width: 0; /* Prevents flex children from stretching layout tables */
+}
+
+.side-metrics-panel {
+    flex: 1;
+    min-width: 290px;
+    position: sticky;
+    top: 40px; /* Aligns perfectly down the padding line as you scroll */
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 /* Form Structural Grids */
@@ -118,16 +149,29 @@ input:focus, textarea:focus { border-color: var(--accent); outline: none; }
 
 .alert { margin-top: 15px; padding: 12px; border-radius: 6px; display: none; text-align: center; font-weight: 500;}
 .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
-/* --- MOBILE RESPONSIVE LAYOUT MECHANICS --- */
+
+/* ==========================================================================
+   Mobile Responsive Framework Adjustments
+   ========================================================================== */
+@media (max-width: 992px) {
+    .dashboard-grid-layout {
+        flex-direction: column;
+    }
+    .side-metrics-panel {
+        width: 100%;
+        position: static;
+    }
+}
+
 @media (max-width: 768px) {
     body {
-        flex-direction: column; /* Stack sidebar on top of main content */
+        flex-direction: column;
     }
 
     .sidebar {
         width: 100%;
         height: auto;
-        position: relative; /* Release fixed position so it scrolls away naturally */
+        position: relative;
         padding: 15px 0;
     }
 
@@ -137,7 +181,7 @@ input:focus, textarea:focus { border-color: var(--accent); outline: none; }
     }
 
     .nav-tabs {
-        display: flex; /* Turn sidebar menu into a horizontal navigation bar */
+        display: flex;
         justify-content: space-around;
         padding: 5px 0 0 0;
     }
@@ -151,27 +195,25 @@ input:focus, textarea:focus { border-color: var(--accent); outline: none; }
 
     .nav-item.active, .nav-item:hover {
         border-left: none;
-        border-bottom: 3px solid var(--accent); /* Move active indicator to the bottom */
+        border-bottom: 3px solid var(--accent);
     }
 
     .main-content {
-        margin-left: 0; /* Remove the wide desk space spacing offset */
+        margin-left: 0;
         padding: 20px 15px;
     }
 
-    /* Transform input forms into single-column layouts for easy tapping */
     .grid-2, .grid-3, .grid-4 {
         grid-template-columns: 1fr; 
         gap: 12px;
     }
 
-    /* Prevent tables from breaking the screen container */
     .card {
         padding: 16px;
-        overflow-x: auto; /* Allow horizontal swiping on small data tables */
+        overflow-x: auto;
     }
     
     input, textarea, .btn-submit {
-        font-size: 16px; /* Prevents iOS Safari from zooming automatically when focusing inputs */
+        font-size: 16px;
     }
 }
